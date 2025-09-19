@@ -284,12 +284,13 @@
         border-radius: 12px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
       }
       .coupon .coupon-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        
       }
       .label {
         font-size: 12px;
@@ -509,17 +510,19 @@
           <div class="coupon-header">
             <div>
               <div class="label">TO</div>
-              <div class="value" id="coupon-name">Alex Morgan</div>
+              <div class="value" id="coupon-name">SWORNALATA</div>
             </div>
             <div style="text-align: right">
-              <div class="label">SAVE</div>
-              <div class="value">₹500</div>
+              <div class="label">FROM</div>
+              <div class="value">SAMEER</div>
             </div>
           </div>
 
           <div class="coupon-body">
             <div class="label">Coupon Number</div>
-            <div class="value" id="coupon-number">BDAY-2025-8273</div>
+            <div class="value" id="coupon-number">1111222233334445555</div>
+
+            
 
             <div style="margin-top: 10px" class="label">PIN</div>
             <div
@@ -793,7 +796,7 @@
      ------------------------- */
         const pinEl = document.getElementById("pin");
         const togglePinBtn = document.getElementById("toggle-pin");
-        const REAL_PIN = "4829"; // change this value to your real pin if needed
+        const REAL_PIN = "12345678"; // change this value to your real pin if needed
         let pinShown = false;
         if (togglePinBtn && pinEl) {
           togglePinBtn.addEventListener("click", () => {
