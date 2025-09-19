@@ -1,306 +1,442 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width,initial-scale=1,viewport-fit=cover"
-    />
-    <title>Happy Birthday — Mobile Card</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="card" role="region" aria-label="Birthday card">
-      <div class="carousel">
-        <div class="slides" id="slides">
-          <!-- Replace src with actual person images. Prefer portrait-oriented images for best result. -->
-          <div class="slide active">
-            <img src="images/IMG-20250526-WA0015-crop.jpg"  alt="Birthday person 1" />
-          </div>
-          <div class="slide">
-            <img src="image/IMG-20250526-WA0016.jpg" alt="Birthday person 2" />
-          </div>
-          <div class="slide">
-            <img src="image/IMG-20250603-WA0002.jpg" alt="Birthday person 3" />
-          </div>
-        </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Happy Birthday — Mobile Card</title>
+  <style>
+    :root{
+      --bg:#fff8ff;
+      --card:#ffffff;
+      --accent:#7c3aed; /* purple */
+      --muted:#6b7280;
+      --glass: rgba(255,255,255,0.6);
+      --shadow: 0 10px 30px rgba(16,24,40,0.12);
+      --radius:18px;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: linear-gradient(180deg,#f2e7ff 0%, #fff 55%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
 
-        <button class="ctrl left" id="prev" aria-label="Previous image">
-          <svg viewBox="0 0 24 24">
-            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-          </svg>
-        </button>
-        <button class="ctrl right" id="next" aria-label="Next image">
-          <svg viewBox="0 0 24 24">
-            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
-          </svg>
-        </button>
+    /* Card */
+    .card{width:100%;max-width:420px;background:var(--card);border-radius:26px;box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(124,58,237,0.06)}
 
-        <div class="dots" id="dots"></div>
+    /* Carousel */
+    .carousel{position:relative;width:100%;height:320px;background:linear-gradient(180deg, rgba(124,58,237,0.06), rgba(124,58,237,0.02));display:flex;align-items:center;justify-content:center}
+    .slides{width:100%;height:100%;position:relative}
+    .slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease,transform .45s ease;opacity:0;transform:scale(.98);pointer-events:none}
+    .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+    .slide img{width:86%;max-height:86%;object-fit:cover;border-radius:14px;box-shadow:0 8px 20px rgba(16,24,40,0.12);border:6px solid rgba(255,255,255,0.82)}
+
+    .ctrl{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center;backdrop-filter: blur(6px);border:1px solid rgba(124,58,237,0.08);cursor:pointer}
+    .ctrl.left{left:12px}
+    .ctrl.right{right:12px}
+    .ctrl svg{width:18px;height:18px;fill:var(--accent)}
+
+    .dots{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:8px}
+    .dot{width:8px;height:8px;border-radius:50%;background:rgba(16,24,40,0.12)}
+    .dot.active{background:var(--accent)}
+
+    /* Content */
+    .content{padding:18px 18px 24px}
+    .title{display:flex;align-items:center;gap:10px}
+    .title h1{font-size:20px;margin:0;color:#111827}
+    .small{font-size:13px;color:var(--muted);margin-top:6px}
+    .quote{margin-top:12px;font-size:16px;color:#4b5563;background:linear-gradient(90deg, rgba(124,58,237,0.04), rgba(255,255,255,0));padding:12px;border-radius:12px}
+
+    .actions{display:flex;gap:12px;margin-top:16px}
+    .btn{flex:1;padding:12px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .btn.mem{background:linear-gradient(90deg,#fff,#f8f3ff);border:1px solid rgba(124,58,237,0.08);color:var(--accent)}
+    .btn.gift{background:linear-gradient(90deg,var(--accent),#6d28d9);color:white;box-shadow:0 6px 18px rgba(124,58,237,0.18)}
+
+    /* Modal base */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(3,7,18,0.5);display:none;align-items:center;justify-content:center;padding:18px;z-index:60;overflow:auto;-webkit-overflow-scrolling:touch}
+    .modal-backdrop.open{display:flex}
+    .modal{width:100%;max-width:720px;max-height:calc(100vh - 80px);background:#ffffff;border-radius:14px;padding:14px;box-shadow:0 14px 40px rgba(2,6,23,0.4);display:flex;flex-direction:column;gap:12px;overflow:hidden}
+
+    .modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto}
+    .modal-body{overflow:auto;padding-bottom:8px}
+
+    /* Memories grid */
+    .mem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;align-items:start}
+    .mem-item{background:#fafafa;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;height:100%;min-height:1px}
+    .mem-item img{width:100%;height:140px;object-fit:cover;display:block;flex:0 0 auto}
+    .mem-caption{padding:8px;font-size:13px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 0 auto}
+
+    /* Gift coupon */
+    .coupon{background:linear-gradient(135deg,#6d28d9,#a78bfa);color:white;padding:18px;border-radius:12px;display:flex;flex-direction:column;gap:8px}
+    .coupon .coupon-header{display:flex;justify-content:space-between;align-items:center}
+    .label{font-size:12px;opacity:.9}
+    .value{font-weight:700;font-size:16px}
+    .pin-wrap{display:flex;align-items:center;gap:10px}
+    .pin{letter-spacing:6px;background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:10px}
+    .show-pin{background:rgba(255,255,255,0.12);padding:8px;border-radius:10px;border:none;color:white;cursor:pointer}
+
+    @media (max-width:420px){.carousel{height:300px}.slide img{width:88%}}
+  </style>
+</head>
+<body>
+  <div class="card" role="region" aria-label="Birthday card">
+    <div class="carousel">
+      <div class="slides" id="slides">
+        <div class="slide active"><img src="images/person1.jpg" alt="Birthday person 1"></div>
+        <div class="slide"><img src="images/person2.jpg" alt="Birthday person 2"></div>
+        <div class="slide"><img src="images/person3.jpg" alt="Birthday person 3"></div>
       </div>
 
-      <div class="content">
-        <div class="title">
-          <div style="flex: 1">
-            <h1>Happy Birthday, Alex 🎉</h1>
-            <div class="small">
-              Wishing you a day full of love and surprises
-            </div>
-          </div>
-          <div
-            style="
-              width: 48px;
-              height: 48px;
-              border-radius: 12px;
-              background: linear-gradient(135deg, #fff, #f6edff);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 1px solid rgba(124, 58, 237, 0.08);
-            "
-          >
-            🎂
-          </div>
-        </div>
-
-        <div class="quote">
-          "May your day be filled with laughter, love and the perfect cake
-          slice."
-        </div>
-
-        <div class="actions">
-          <button class="btn mem" id="open-mem">Memories</button>
-          <button class="btn gift" id="open-gift">Open Gift</button>
-        </div>
-      </div>
+      <button class="ctrl left" id="prev" aria-label="Previous image"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+      <button class="ctrl right" id="next" aria-label="Next image"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
+      <div class="dots" id="dots"></div>
     </div>
 
-    <!-- Memories Modal -->
-    <div
-      class="modal-backdrop"
-      id="mem-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-hidden="true"
-    >
-      <div class="modal">
-        <button
-          style="
-            position: absolute;
-            right: 12px;
-            top: 8px;
-            border: none;
-            background: transparent;
-            font-size: 18px;
-            cursor: pointer;
-          "
-          id="close-mem"
-        >
-          ✕
-        </button>
-        <h3 style="margin: 0 0 10px 0">Memories</h3>
-        <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 13px">
-          Tap any image to enlarge
-        </p>
-        <div class="mem-grid">
+    <div class="content">
+      <div class="title">
+        <div style="flex:1">
+          <h1>Happy Birthday, Alex 🎉</h1>
+          <div class="small">Wishing you a day full of love and surprises</div>
+        </div>
+        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#fff,#f6edff);display:flex;align-items:center;justify-content:center;border:1px solid rgba(124,58,237,0.08)">🎂</div>
+      </div>
+
+      <div class="quote">"May your day be filled with laughter, love and the perfect cake slice."</div>
+
+      <div class="actions">
+        <button class="btn mem" id="open-mem">Memories</button>
+        <button class="btn gift" id="open-gift">Open Gift</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Memories Modal -->
+  <div class="modal-backdrop" id="mem-modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document" aria-label="Memories dialog">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0">Memories</h3>
+          <p style="margin:4px 0 0 0;color:#6b7280;font-size:13px">Tap any image to enlarge</p>
+        </div>
+        <button id="close-mem" class="modal-close-btn" aria-label="Close memories">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mem-grid" id="mem-grid">
           <div class="mem-item">
-            <img src="images/IMG-20180920-WA0029.jpg" alt="memory 1" />
+            <img src="images/IMG-20180920-WA0029.jpg" alt="memory 1">
             <div class="mem-caption">Road trip — 2019</div>
           </div>
+
           <div class="mem-item">
-            <img src="images/mem2.jpg" alt="memory 2" />
+            <img src="images/mem2.jpg" alt="memory 2">
             <div class="mem-caption">That rainy evening</div>
           </div>
+
           <div class="mem-item">
-            <img src="images/mem3.jpg" alt="memory 3" />
+            <img src="images/mem3.jpg" alt="memory 3">
             <div class="mem-caption">Graduation day</div>
           </div>
+
           <div class="mem-item">
-            <img src="images/mem4.jpg" alt="memory 4" />
+            <img src="images/mem4.jpg" alt="memory 4">
+            <div class="mem-caption">Café laughs</div>
+          </div>
+
+          <div class="mem-item">
+            <img src="images/mem5.jpg" alt="memory 5">
+            <div class="mem-caption">Café laughs</div>
+          </div>
+
+          <div class="mem-item">
+            <img src="images/mem6.jpg" alt="memory 6">
+            <div class="mem-caption">Café laughs</div>
+          </div>
+
+          <div class="mem-item">
+            <img src="images/mem7.jpg" alt="memory 7">
+            <div class="mem-caption">Café laughs</div>
+          </div>
+
+          <div class="mem-item">
+            <img src="images/mem8.jpg" alt="memory 8">
+            <div class="mem-caption">Café laughs</div>
+          </div>
+
+          <div class="mem-item">
+            <img src="images/mem9.jpg" alt="memory 9">
+            <div class="mem-caption">Café laughs</div>
+          </div>
+
+          <div class="mem-item">
+            <img src="images/mem10.jpg" alt="memory 10">
             <div class="mem-caption">Café laughs</div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Gift Modal -->
-    <div
-      class="modal-backdrop"
-      id="gift-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-hidden="true"
-    >
-      <div class="modal">
-        <button
-          style="
-            position: absolute;
-            right: 12px;
-            top: 8px;
-            border: none;
-            background: transparent;
-            font-size: 18px;
-            cursor: pointer;
-            color: #111;
-          "
-          id="close-gift"
-        >
-          ✕
-        </button>
-        <div class="coupon">
-          <div class="coupon-header">
-            <div>
-              <div class="label">TO</div>
-              <div class="value" id="coupon-name">Alex Morgan</div>
-            </div>
-            <div style="text-align: right">
-              <div class="label">SAVE</div>
-              <div class="value">₹500</div>
-            </div>
+  <!-- Gift Modal -->
+  <div class="modal-backdrop" id="gift-modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0;color:#fff">Gift Coupon</h3>
+          <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.85);font-size:13px">A special gift for you</p>
+        </div>
+        <button id="close-gift" class="modal-close-btn" aria-label="Close gift">✕</button>
+      </div>
+
+      <div style="padding:12px" class="coupon">
+        <div class="coupon-header">
+          <div>
+            <div class="label">TO</div>
+            <div class="value" id="coupon-name">Alex Morgan</div>
           </div>
+          <div style="text-align:right">
+            <div class="label">SAVE</div>
+            <div class="value">₹500</div>
+          </div>
+        </div>
 
-          <div class="coupon-body">
-            <div class="label">Coupon Number</div>
-            <div class="value" id="coupon-number">BDAY-2025-8273</div>
+        <div class="coupon-body">
+          <div class="label">Coupon Number</div>
+          <div class="value" id="coupon-number">BDAY-2025-8273</div>
 
-            <div style="margin-top: 10px" class="label">PIN</div>
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-top: 6px;
-              "
-            >
-              <div class="pin-wrap">
-                <div class="pin" id="pin">*****</div>
-              </div>
-              <button class="show-pin" id="toggle-pin">Tap to show pin</button>
+          <div style="margin-top:10px" class="label">PIN</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+            <div class="pin-wrap">
+              <div class="pin" id="pin">*****</div>
             </div>
+            <button class="show-pin" id="toggle-pin">Tap to show pin</button>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <script>
-      // Simple carousel logic
-      (function () {
-        const slides = Array.from(document.querySelectorAll(".slide"));
-        const dotsWrap = document.getElementById("dots");
-        let idx = 0;
+ <script>
+/* Full JS: carousel + touch/swipe + modals + PIN toggle
+   Paste this at the end of your HTML, before </body> */
 
-        function makeDots() {
-          slides.forEach((s, i) => {
-            const d = document.createElement("div");
-            d.className = "dot";
-            if (i === 0) d.classList.add("active");
-            d.setAttribute("data-i", i);
-            d.addEventListener("click", () => goTo(i));
-            dotsWrap.appendChild(d);
-          });
-        }
-        function update() {
-          slides.forEach((s, i) => s.classList.toggle("active", i === idx));
-          Array.from(dotsWrap.children).forEach((d, i) =>
-            d.classList.toggle("active", i === idx)
-          );
-        }
-        function goTo(i) {
-          idx = (i + slides.length) % slides.length;
-          update();
-        }
-        document
-          .getElementById("prev")
-          .addEventListener("click", () => goTo(idx - 1));
-        document
-          .getElementById("next")
-          .addEventListener("click", () => goTo(idx + 1));
-        makeDots();
+(function () {
+  /* -------------------------
+     Carousel setup & controls
+     ------------------------- */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  if (!slides.length) return;
 
-        // auto-advance (gentle)
-        let timer = setInterval(() => goTo(idx + 1), 4500);
-        [
-          document.getElementById("prev"),
-          document.getElementById("next"),
-          dotsWrap,
-        ].forEach((el) => {
-          el.addEventListener("mouseenter", () => clearInterval(timer));
-          el.addEventListener(
-            "mouseleave",
-            () => (timer = setInterval(() => goTo(idx + 1), 4500))
-          );
-        });
-      })();
+  let idx = 0;
+  let timer = null;
+  const AUTO_MS = 4500;
 
-      // Memories modal
-      const memModal = document.getElementById("mem-modal");
-      const openMem = document.getElementById("open-mem");
-      const closeMem = document.getElementById("close-mem");
-      openMem.addEventListener("click", () => {
-        memModal.style.display = "flex";
-        memModal.setAttribute("aria-hidden", "false");
-      });
-      closeMem.addEventListener("click", () => {
-        memModal.style.display = "none";
-        memModal.setAttribute("aria-hidden", "true");
-      });
-      memModal.addEventListener("click", (e) => {
-        if (e.target === memModal) {
-          memModal.style.display = "none";
-          memModal.setAttribute("aria-hidden", "true");
-        }
-      });
+  function makeDots() {
+    if (!dotsWrap) return;
+    dotsWrap.innerHTML = '';
+    slides.forEach((s, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot';
+      if (i === idx) d.classList.add('active');
+      d.setAttribute('data-i', String(i));
+      d.tabIndex = 0;
+      d.addEventListener('click', () => goTo(i));
+      d.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') goTo(i); });
+      dotsWrap.appendChild(d);
+    });
+  }
 
-      // enlarge memory images on click
-      document.querySelectorAll(".mem-item img").forEach((img) => {
-        img.style.cursor = "pointer";
-        img.addEventListener("click", () => {
-          const win = window.open(img.src, "_blank");
-          if (!win) alert("Image opened in new tab.");
-        });
-      });
+  function updateSlides() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    if (dotsWrap) {
+      Array.from(dotsWrap.children).forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+  }
 
-      // Gift modal
-      const giftModal = document.getElementById("gift-modal");
-      const openGift = document.getElementById("open-gift");
-      const closeGift = document.getElementById("close-gift");
-      openGift.addEventListener("click", () => {
-        giftModal.style.display = "flex";
-        giftModal.setAttribute("aria-hidden", "false");
-      });
-      closeGift.addEventListener("click", () => {
-        giftModal.style.display = "none";
-        giftModal.setAttribute("aria-hidden", "true");
-      });
-      giftModal.addEventListener("click", (e) => {
-        if (e.target === giftModal) {
-          giftModal.style.display = "none";
-          giftModal.setAttribute("aria-hidden", "true");
-        }
-      });
+  function goTo(i) {
+    idx = ((i % slides.length) + slides.length) % slides.length;
+    updateSlides();
+  }
 
-      // Pin toggle
-      const pinEl = document.getElementById("pin");
-      const toggle = document.getElementById("toggle-pin");
-      const realPin = "4829"; // change to real pin if needed
-      let shown = false;
-      toggle.addEventListener("click", () => {
-        shown = !shown;
-        pinEl.textContent = shown ? realPin : "*****";
-        toggle.textContent = shown ? "Hide pin" : "Tap to show pin";
-      });
+  if (prevBtn) prevBtn.addEventListener('click', () => { goTo(idx - 1); resetAuto(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { goTo(idx + 1); resetAuto(); });
 
-      // Accessibility: close modals with escape
-      window.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          [memModal, giftModal].forEach((m) => {
-            if (m.style.display === "flex") {
-              m.style.display = "none";
-              m.setAttribute("aria-hidden", "true");
-            }
-          });
-        }
-      });
-    </script>
-  </body>
+  makeDots();
+  updateSlides();
+
+  function startAuto() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => goTo(idx + 1), AUTO_MS);
+  }
+  function stopAuto() { if (timer) { clearInterval(timer); timer = null; } }
+  function resetAuto() { stopAuto(); startAuto(); }
+
+  // pause auto on mouseenter / focus, resume on leave
+  [prevBtn, nextBtn, dotsWrap].forEach(el => {
+    if (!el) return;
+    el.addEventListener('mouseenter', stopAuto);
+    el.addEventListener('mouseleave', startAuto);
+    el.addEventListener('focusin', stopAuto);
+    el.addEventListener('focusout', startAuto);
+  });
+
+  startAuto();
+
+  /* -------------------------
+     Touch / swipe support
+     ------------------------- */
+  const container = document.getElementById('slides');
+  if (container) {
+    // Helpful CSS: .slides { touch-action: pan-y; } (add in CSS)
+    const SWIPE_THRESHOLD = 60; // px
+    let startX = 0, startY = 0, deltaX = 0, deltaY = 0;
+    let pointerActive = false;
+
+    function handleSwipeEnd() {
+      if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (deltaX < 0) goTo(idx + 1); else goTo(idx - 1);
+      }
+      // reset
+      startX = startY = deltaX = deltaY = 0;
+      pointerActive = false;
+      resetAuto();
+    }
+
+    if (window.PointerEvent) {
+      container.addEventListener('pointerdown', (e) => {
+        if (e.isPrimary === false) return;
+        pointerActive = true;
+        startX = e.clientX; startY = e.clientY; deltaX = deltaY = 0;
+        stopAuto();
+        container.setPointerCapture?.(e.pointerId);
+      }, { passive: true });
+
+      container.addEventListener('pointermove', (e) => {
+        if (!pointerActive) return;
+        deltaX = e.clientX - startX;
+        deltaY = e.clientY - startY;
+        if (Math.abs(deltaX) > Math.abs(deltaY)) e.preventDefault(); // keep horizontal gestures responsive
+      }, { passive: false });
+
+      container.addEventListener('pointerup', handleSwipeEnd);
+      container.addEventListener('pointercancel', handleSwipeEnd);
+    } else {
+      // touch fallback
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) return;
+        startX = e.touches[0].clientX; startY = e.touches[0].clientY; deltaX = deltaY = 0;
+        stopAuto();
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (!e.touches || e.touches.length > 1) return;
+        deltaX = e.touches[0].clientX - startX;
+        deltaY = e.touches[0].clientY - startY;
+        if (Math.abs(deltaX) > Math.abs(deltaY)) e.preventDefault();
+      }, { passive: false });
+
+      container.addEventListener('touchend', handleSwipeEnd);
+      container.addEventListener('touchcancel', handleSwipeEnd);
+    }
+
+    // keyboard arrows
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { goTo(idx - 1); resetAuto(); }
+      if (e.key === 'ArrowRight') { goTo(idx + 1); resetAuto(); }
+    });
+  }
+
+  /* -------------------------
+     Modals: memories & gift
+     ------------------------- */
+  const memModal = document.getElementById('mem-modal');
+  const openMemBtn = document.getElementById('open-mem');
+  const closeMemBtn = document.getElementById('close-mem');
+
+  const giftModal = document.getElementById('gift-modal');
+  const openGiftBtn = document.getElementById('open-gift');
+  const closeGiftBtn = document.getElementById('close-gift');
+
+  function openModal(modal, focusEl) {
+    if (!modal) return;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    if (focusEl) focusEl.focus();
+  }
+  function closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  if (openMemBtn) openMemBtn.addEventListener('click', () => openModal(memModal, closeMemBtn));
+  if (closeMemBtn) closeMemBtn.addEventListener('click', () => closeModal(memModal));
+  if (openGiftBtn) openGiftBtn.addEventListener('click', () => openModal(giftModal, closeGiftBtn));
+  if (closeGiftBtn) closeGiftBtn.addEventListener('click', () => closeModal(giftModal));
+
+  // click outside to close
+  [memModal, giftModal].forEach(modal => {
+    if (!modal) return;
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(modal); });
+  });
+
+  // ESC to close
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      [memModal, giftModal].forEach(m => { if (m && m.classList.contains('open')) closeModal(m); });
+    }
+  });
+
+  // enlarge memory images by opening in new tab (safe fallback)
+  document.querySelectorAll('.mem-item img').forEach(img => {
+    img.style.cursor = 'pointer';
+    img.addEventListener('click', () => { window.open(img.src, '_blank'); });
+  });
+
+  /* -------------------------
+     PIN toggle for gift coupon
+     ------------------------- */
+  const pinEl = document.getElementById('pin');
+  const togglePinBtn = document.getElementById('toggle-pin');
+  const REAL_PIN = '4829'; // change this value to your real pin if needed
+  let pinShown = false;
+  if (togglePinBtn && pinEl) {
+    togglePinBtn.addEventListener('click', () => {
+      pinShown = !pinShown;
+      pinEl.textContent = pinShown ? REAL_PIN : '*****';
+      togglePinBtn.textContent = pinShown ? 'Hide pin' : 'Tap to show pin';
+      togglePinBtn.setAttribute('aria-pressed', String(pinShown));
+    });
+  }
+
+  /* -------------------------
+     small robustness helpers
+     ------------------------- */
+  // ensure modal close buttons exist (create fallback if missing)
+  if (memModal && !closeMemBtn) {
+    const fallbackClose = memModal.querySelector('button') || document.createElement('button');
+    fallbackClose.textContent = 'Close';
+    fallbackClose.addEventListener('click', () => closeModal(memModal));
+  }
+
+  if (giftModal && !closeGiftBtn) {
+    const fallbackClose = giftModal.querySelector('button') || document.createElement('button');
+    fallbackClose.textContent = 'Close';
+    fallbackClose.addEventListener('click', () => closeModal(giftModal));
+  }
+})();
+</script>
+</body>
 </html>
