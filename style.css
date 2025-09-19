@@ -207,35 +207,55 @@ body {
   z-index: 60;
 }
 .modal {
-  max-width: 520px;
+  max-width: calc(100vh - 80px);
   width: 100%;
   background: white;
   border-radius: 16px;
   padding: 14px;
   box-shadow: 0 14px 40px rgba(2, 6, 23, 0.4);
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 /* Memories grid */
 .mem-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+ 
+
+  align-items: start;
+  padding-bottom: 8px;
+  box-sizing: border-box;
 }
 .mem-item {
   background: #fafafa;
   border-radius: 12px;
   overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .mem-item img {
   width: 100%;
   height: 140px;
   object-fit: cover;
   display: block;
+  
 }
 .mem-caption {
   padding: 8px;
   font-size: 13px;
   color: #374151;
+
+  line-height: 1.1;
+  background: transparent;
+  flex: 0 0 auto;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Gift coupon */
@@ -304,4 +324,19 @@ body {
   .slide img {
     width: 88%;
   }
+}
+
+@media (min-width: 520px) {
+  .mem-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.modal::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.modal::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  border-radius: 8px;
 }
